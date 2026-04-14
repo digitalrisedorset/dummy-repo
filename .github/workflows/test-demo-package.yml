@@ -1,0 +1,46 @@
+name: Test Demo Package
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check-demo-package:
+    runs-on: ubuntu-latest
+    outputs:
+      exists: ${{ steps.check.outputs.exists }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check if folder exists
+        id: check
+        run: |
+          if [ -d "_test/demo-package" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+  test:
+    needs: check-demo-package
+    if: needs.check-demo-package.outputs.exists == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install TypeScript
+        run: npm install -g typescript
+
+      - name: Compile TS file
+        run: |
+          tsc _test/demo-package/hello-world.ts
